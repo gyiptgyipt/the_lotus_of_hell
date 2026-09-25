@@ -1,0 +1,29 @@
+vision_follower:
+  ros__parameters:
+    # ROS image topic after ros_gz_image has bridged the follower camera.
+    # UAV 2's camera image, bridged from Gazebo by tmuxinator.
+    image_topic: /uav_2/camera/image
+    # PX4 instance 2 uses /px4_2. Set this to /px4_1 if you use -i 1 for UAV 2.
+    px4_namespace: /px4_2
+    auto_arm: true
+    desired_distance_m: 4.0
+    # A YOLO model trained with a drone/uav/quadcopter class is required.
+    # Bundled drone detector; override with model_path:=... when needed.
+    model_path: /home/zyme/ros_ws/kamikaze/src/uav_vision_follow/models/drone_yolo.pt
+    target_class_names: [drone, uav, quadcopter]
+    confidence_threshold: 0.45
+    inference_size: 640
+    # Approximate X500 width, used for monocular range from the YOLO box width.
+    target_size_m: 0.50
+    horizontal_fov_rad: 1.74  # x500_mono_cam imager SDF setting
+    max_speed_mps: 1.5
+    max_yaw_rate_rps: 0.6
+    range_gain: 0.55
+    yaw_gain: 0.8
+    min_target_area_px: 200
+    lost_target_timeout_s: 0.5
+    # Vision interceptor: UAV 2 predicts UAV 1's NED motion and performs lead pursuit.
+    # It stops rather than colliding once the predicted target is within this radius.
+    intercept_distance_m: 2.0
+    prediction_horizon_s: 1.2
+    relative_velocity_alpha: 0.35
