@@ -1,0 +1,52 @@
+# Start with:
+#   tmuxinator start -p ~/ros_ws/kamikaze/src/uav_vision_follow/tmuxinator/uav_vision_follow.yml
+#
+# Optional overrides, before starting:
+#   export PX4_DIR=/path/to/PX4-Autopilot
+#   export UAV_1_GZ_IMAGE_TOPIC=/world/baylands/model/x500_mono_cam_1/link/camera_link/sensor/imager/image
+#   export UAV_2_GZ_IMAGE_TOPIC=/world/baylands/model/x500_mono_cam_2/link/camera_link/sensor/imager/image
+#   export DRONE_YOLO_MODEL=$KAMIKAZE_WS/src/uav_vision_follow/models/drone_yolo.pt
+name: uav_vision_follow
+root: <%= ENV.fetch('KAMIKAZE_WS', File.expand_path('~/ros_ws/the_lotus_of_hell')) %>
+
+# The workspace package is rebuilt before the simulator windows are opened.
+on_project_start: >-
+  source /opt/ros/jazzy/setup.bash &&
+  colcon build --packages-select uav_vision_follow
+  --cmake-args -DPython3_EXECUTABLE=/usr/bin/python3
+
+# Runs in every pane. Change /opt/ros/jazzy if you use another ROS distribution.
+pre_window: >-
+  source /opt/ros/jazzy/setup.bash &&
+  source install/setup.bash &&
+  export PX4_DIR="${PX4_DIR:-$HOME/PX4-Autopilot}" &&
+  export UAV_1_GZ_IMAGE_TOPIC="${UAV_1_GZ_IMAGE_TOPIC:-/world/baylands/model/x500_mono_cam_1/link/camera_link/sensor/imager/image}" &&
+  export UAV_2_GZ_IMAGE_TOPIC="${UAV_2_GZ_IMAGE_TOPIC:-/world/baylands/model/x500_mono_cam_2/link/camera_link/sensor/imager/image}" &&
+  export DRONE_YOLO_MODEL="${DRONE_YOLO_MODEL:-$KAMIKAZE_WS/src/uav_vision_follow/models/drone_yolo.pt}"
+
+windows:
+  - sitl:
+      layout: even-horizontal
+      panes:
+        - leader: >-
+            cd "$PX4_DIR" &&
+            PX4_SYS_AUTOSTART=4001 PX4_GZ_WORLD=baylands PX4_SIM_MODEL=gz_x500_mono_cam
+            ./build/px4_sitl_default/bin/px4 -i 1
+        - follower: >-
+            sleep 8 && cd "$PX4_DIR" &&
+            PX4_GZ_STANDALONE=1 PX4_GZ_WORLD=baylands PX4_SYS_AUTOSTART=4002
+            PX4_GZ_MODEL_POSE="-1,0,0,0,0,0"
+            PX4_SIM_MODEL=gz_x500_mono_cam ./build/px4_sitl_default/bin/px4 -i 2
+  - ros:
+      layout: tiled
+      panes:
+        - xrce_agent: MicroXRCEAgent udp4 -p 8888
+        - uav_1_camera: >-
+            sleep 12 && ros2 run ros_gz_image image_bridge "$UAV_1_GZ_IMAGE_TOPIC"
+            --ros-args -r "$UAV_1_GZ_IMAGE_TOPIC:=/uav_1/camera/image"
+        - uav_2_camera: >-
+            sleep 12 && ros2 run ros_gz_image image_bridge "$UAV_2_GZ_IMAGE_TOPIC"
+            --ros-args -r "$UAV_2_GZ_IMAGE_TOPIC:=/uav_2/camera/image"
+        # - vision_follower: >-
+        #     sleep 15 && ros2 launch uav_vision_follow vision_interceptor.launch.py
+        #     model_path:="$DRONE_YOLO_MODEL"

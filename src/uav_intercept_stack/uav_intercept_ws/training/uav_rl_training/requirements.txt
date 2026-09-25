@@ -1,0 +1,9 @@
+# Install into the same Python environment your ROS2 (rclpy) uses, or make
+# sure that environment's rclpy is importable from wherever you pip install
+# these (e.g. a venv with --system-site-packages).
+gymnasium>=0.29
+stable-baselines3>=2.3
+torch>=2.1
+onnx>=1.16
+onnxruntime>=1.18
+numpy>=1.24

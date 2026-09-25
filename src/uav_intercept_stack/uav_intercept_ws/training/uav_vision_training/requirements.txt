@@ -1,0 +1,6 @@
+# Same note as training/uav_rl_training/requirements.txt: install into an
+# environment where rclpy and cv_bridge (from your ROS2 install) are importable.
+ultralytics>=8.3
+opencv-python>=4.9
+onnx>=1.16
+numpy>=1.24

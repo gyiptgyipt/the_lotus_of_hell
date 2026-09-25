@@ -1,0 +1,10 @@
+uav_vision_detect:
+  ros__parameters:
+    model_path: ""              # set via launch arg -- path to exported YOLO .onnx
+    target_size_m: 0.35          # characteristic size (largest dimension as typically viewed) of the target drone
+    conf_threshold: 0.4
+    nms_iou_threshold: 0.45
+    model_input_size: 640
+    max_missed_frames: 5
+    velocity_smoothing_alpha: 0.3
+    mount_q_wxyz_offset: [1.0, 0.0, 0.0, 0.0]   # identity; set if camera isn't boresight-forward
